@@ -14,7 +14,6 @@ void Camera::driveForward() {
 	refresh();
 }
 
-
 void Camera::driveBackward() {
 	x -= lx * fraction;
 	z -= lz * fraction;
@@ -24,7 +23,7 @@ void Camera::driveBackward() {
 //rotates the point you are looking at around the "camera"
 void Camera::turnRight()
 {
-	angle += 0.15f;
+	angle += 0.1f;
 	lx = sin(angle);
 	lz = -cos(angle);
 	refresh();
@@ -33,7 +32,7 @@ void Camera::turnRight()
 //rotates the point you are looking at around the "camera"
 void Camera::turnLeft()
 {
-	angle -= 0.15f;
+	angle -= 0.1f;
 	lx = sin(angle);
 	lz = -cos(angle);
 	refresh();

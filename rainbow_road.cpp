@@ -25,6 +25,19 @@ GLfloat world_scale = 15;
 GLfloat world_ground_offset = -9.95 * world_scale;
 GLfloat world_rotate_angle = 0;
 
+GLfloat rotate_threshold = world_scale * 10;
+
+GLfloat rotate_x = 0;
+GLfloat rotate_y = 0;
+GLfloat rotate_z = 0;
+
+GLfloat rotate_car_x = 0;
+GLfloat rotate_car_y = 90;
+GLfloat rotate_car_z = 30;
+
+bool fly_mode = false;
+
+
 Car car;
 World world;
 Camera camera;
@@ -38,12 +51,13 @@ void display() {
   // Reset
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glLoadIdentity();
-  
+
   // Render the car statically -- before the gluLookat() 
   glPushMatrix();
     glTranslatef(0, 0, -3);
-    glRotatef(90, 0, 1, 0);
-    glRotatef(30, 0, 0, 1);
+    glRotatef(rotate_car_x, 0, 1, 0);
+    glRotatef(rotate_car_y, 0, 1, 0);
+    glRotatef(rotate_car_z, 0, 0, 1);
     car.display();
   glPopMatrix();
 
@@ -55,11 +69,15 @@ void display() {
   
   // Render the world
   glPushMatrix();
+    glRotatef((rotate_x) * 0.8, 0.5, 0, 0);
+    glRotatef((rotate_y) * 0.8, 0, 0.5, 0);
+    glRotatef((rotate_z) * 0.8, 0, 0, 0.5);
     glScalef(world_scale, world_scale, world_scale);
     glColor3f(1.0, 1.0, 1.0);
     world.display();
   glPopMatrix();
-    
+
+  // Do it!
   glutSwapBuffers();
 }
 
@@ -72,16 +90,68 @@ void reshape (int w, int h) {
   glLoadIdentity();
 }
 
+void rotateCube() {
+  rotate_x += 0.08;
+  rotate_y += 0.06;
+  rotate_z += 0.03;
+}
+
+void reset() {
+  camera.angle = 90.0;
+  camera.lx    =  0.0f;
+  camera.lz    = 1.0f;
+  camera.x     = 0.0f;
+  camera.z     = 5.0f;
+
+  rotate_x =0;
+  rotate_y =0;
+  rotate_z =0;
+  rotate_car_x = 0;
+  rotate_car_y = 90;
+  rotate_car_z = 30;
+}
+
+void spinCar() {
+  rotate_car_x += 0.1;
+  rotate_car_y += 0.3;
+  rotate_car_z -= 0.2;
+} 
+
 void idle() {
-   // camera.driveForward();
-   if (car.moving()) {
-    car.moveForward();
-   }
+  if (car.is_moving_forward) {
+    camera.driveForward();
+    cout << "-------" << endl;
+    cout << "x: " << camera.xFocus << endl;
+    cout << "y: " << camera.yFocus << endl;
+    cout << "z: " << camera.zFocus << endl;
+    cout << endl;
+  } else if (car.is_moving_backward) {
+    camera.driveBackward();
+  }
+
+  if (car.is_turning_left) {
+    camera.turnLeft();
+  } else if (car.is_turning_right) {
+    camera.turnRight();
+  }
+
+  if (fly_mode) {
+    rotateCube();  
+    spinCar();
+  }
+  
   glutPostRedisplay();
 }
 
 void menu(int item) {
-  car.menu(item);
+  if (item == 0) { // fly mode
+    if (fly_mode) {
+      fly_mode = false;
+      reset();
+    } else {
+      fly_mode = true;
+    }
+  }
 }
 
 void init() {
@@ -105,11 +175,7 @@ void init() {
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
   world.init();
   // angle of rotation for the camera direction
-  camera.angle = 90.0;
-  camera.lx    =  0.0f;
-  camera.lz    = 1.0f;
-  camera.x     = 0.0f;
-  camera.z     = 5.0f;
+  reset();
   
   camera.fraction  = 1.0f;
   camera.xPosition = camera.x;
@@ -127,25 +193,45 @@ void init() {
 
 void specialKeys(int key, int x, int y) {
   if (key == GLUT_KEY_RIGHT) {
-    camera.turnRight();
     car.turnRight();
   }
   
   else if (key == GLUT_KEY_LEFT) {
-    camera.turnLeft();
     car.turnLeft();
   }
 
   else if (key == GLUT_KEY_UP) {
-    camera.driveForward();
     car.goStrait();
+    if (car.is_moving_backward){
+      car.stop();
+    } else {
+      car.moveForward();  
+    }
   }
   else if (key == GLUT_KEY_DOWN) {
-    camera.driveBackward();
     car.goStrait();
+    if (car.is_moving_forward) {
+      car.stop();
+    } else {
+      car.moveBackward();  
+    }
   }
 }
 
+void keyboard(unsigned char key, int x, int y) {
+  if (key == 'w') {
+    rotate_x -= 1;
+  }
+  if (key == 's') {
+    rotate_x +=1;
+  }
+  if (key == 'd') {
+    rotate_z += 1;
+  }
+  if (key == 'a') {
+    rotate_z -= 1;
+  }
+}
 
 int main(int argc, char **argv) {
   glutInit(&argc, argv);
@@ -157,13 +243,13 @@ int main(int argc, char **argv) {
   init();
   glutCreateMenu(menu);
   glutAttachMenu(GLUT_RIGHT_BUTTON);
-  glutAddMenuEntry("Turn Left",   0);
-  glutAddMenuEntry("Turn Right",  1);
+  glutAddMenuEntry("Zero Gs!",   0);
   
   glutDisplayFunc(display);
   glutReshapeFunc(reshape);
   glutIdleFunc(idle);
   glutSpecialFunc(specialKeys);
+  glutKeyboardFunc(keyboard);
   glutMainLoop();
   return 0;
 }

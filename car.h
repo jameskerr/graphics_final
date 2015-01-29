@@ -4,14 +4,20 @@ public:
 
   // Display
   void display();
-  bool moving();
-  void setMoving(bool moving);
+  void tick();
+
   void moveForward();
+  void moveBackward();
   void turnLeft();
   void turnRight();
   void goStrait();
-  void tick();
-  void menu(int item);
+  void stop();
+
+  bool is_turning_left  = false;
+  bool is_turning_right = false;
+  bool is_moving_forward = false;
+  bool is_moving_backward = false;
+  bool go_strait = true;
 
 private:
   GLfloat car_length = 0.5; // From origin
@@ -21,14 +27,9 @@ private:
   GLint   tire_sides = 20;
   GLint   tire_rings = 50;
 
-  bool is_moving = true;
   GLfloat wheel_rotation_speed = 0.0;
   GLfloat wheel_rotation_angle = 0.0;
   GLfloat wheel_turn_angle     = 0.0;
-
-  bool turning_left  = false;
-  bool turning_right = false;
-  bool go_strait = true;
 
   void tire(GLfloat size, GLfloat x, GLfloat y, GLfloat z, GLfloat angle, GLfloat turn);
 

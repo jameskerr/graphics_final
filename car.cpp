@@ -6,20 +6,8 @@
 
 #include "car.h"
 
-void Car::menu(int item) {
-  switch (item) {
-    case 0:
-      turnLeft();
-    break;
-    case 1:
-      turnRight();
-    default:
-    break;
-  }
-}
-
 void Car::display() {
-  tick();
+  tick();  // Sets the state for this frame
 
   GLfloat sample_rate = 0.01;
   
@@ -230,37 +218,32 @@ void Car::tire(GLfloat size, GLfloat x, GLfloat y, GLfloat z, GLfloat angle, GLf
   glPopMatrix();
 }
 
-bool Car::moving() {
-  return is_moving;
-}
-
-void Car::setMoving(bool moving) {
-  is_moving = moving;
-}
-
-void Car::moveForward() {
-  wheel_rotation_speed -= 2.5;
-}
-
 void Car::tick() {
-  
+  if (is_moving_forward) {
+    wheel_rotation_speed -= 2.5;
+  } else if (is_moving_backward) {
+    wheel_rotation_speed += 2.5;
+  }
+
   // Left Turn
-  if (turning_left) {
+  if (is_turning_left) {
     if (wheel_rotation_angle < 20.0) {
        wheel_rotation_angle += 5.0;
        wheel_turn_angle     += 5.0;
     } else {
-      turning_left = false;
+      is_turning_left = false;
+      go_strait = true;
     }
   }
 
   // Right Turn
-  if (turning_right) {
+  if (is_turning_right) {
     if (wheel_rotation_angle > -20.0) {
       wheel_rotation_angle -= 5.0;
       wheel_turn_angle     -= 5.0;
     } else {
-      turning_right = false;
+      is_turning_right = false;
+      go_strait = true;
     }
   }
 
@@ -276,19 +259,37 @@ void Car::tick() {
 }
 
 void Car::turnLeft() {
-  turning_left = true;
-  turning_right = false;
+  is_turning_left = true;
+  is_turning_right = false;
   go_strait = false;
 }
 
 void Car::turnRight() {
-  turning_right = true;
-  turning_left = false;
+  is_turning_right = true;
+  is_turning_left = false;
   go_strait = false;
 }
 
+void Car::moveForward() {
+  is_moving_forward = true;
+  is_moving_backward = false;
+}
+
+void Car::moveBackward() {
+  is_moving_backward = true;
+  is_moving_forward = false;
+}
+
 void Car::goStrait() {
-  turning_right = false;
-  turning_left = false;
+  is_turning_right = false;
+  is_turning_left = false;
+  go_strait = true;
+}
+
+void Car::stop() {
+  is_moving_backward = false;
+  is_moving_forward = false;
+  is_turning_right = false;
+  is_turning_left = false;
   go_strait = true;
 }
