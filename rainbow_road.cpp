@@ -4,15 +4,28 @@
 #include <GLUT/glut.h>
 #endif
 
+#include <iostream>
+#include "world.h"
 #include "car.h"
+#include "camera.h"
 
-GLfloat width = 600.0;
-GLfloat height = 600.0;
+using namespace std;
 
-GLfloat rotate_around_x = 1.5;
-GLfloat rotate_around_y = 1.5;
-GLfloat rotate_around_z = 1.5;
+
+GLfloat width = 800.0;
+GLfloat height = 800.0;
+
+GLfloat rotate_around_x = 0;
+GLfloat rotate_around_y = 0;
+GLfloat rotate_around_z = 0;
+
+GLfloat world_scale = 10;
+GLfloat world_ground_offset = -9.95 * world_scale;
+GLfloat world_rotate_angle = 0;
+
 Car car;
+World world;
+Camera camera;
 
 /********************
 ::: MAIN FUNCTION :::
@@ -20,18 +33,35 @@ Car car;
 
 
 void display() {
-  //glLoadIdentity();
-  // gluLookAt(rotate_around_x, rotate_around_y, rotate_around_z, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
-
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glColor3f(1.0, 1.0, 1.0);
-  glPushMatrix();
-    glRotatef(rotate_around_x, 1, 0, 0);
-    glRotatef(rotate_around_y, 0, 1, 0);
-    glRotatef(rotate_around_z, 0, 0, 1);
-    car.display();
 
-    glPopMatrix();
+  glLoadIdentity();
+  
+  glPushMatrix();
+    
+    //glTranslatef(0, world_ground_offset, 0);
+    glTranslatef(0, 0, -3);
+    glRotatef(90, 0, 1, 0);
+    //glRotatef(20, 0, 0, 1);
+    car.display();
+  glPopMatrix();
+
+  gluLookAt(camera.xPosition, camera.yPosition, camera.zPosition, camera.xFocus, camera.yFocus, camera.zFocus, camera.xUp, camera.yUp, camera.zUp);
+
+  
+  glPushMatrix();
+    glScalef(world_scale, world_scale, world_scale);
+    glColor3f(1.0, 1.0, 1.0);
+    world.display();
+  glPopMatrix();
+    
+
+    
+    // Rotate the world to which ever "floor I am on"
+
+
+  glPopMatrix();
     
   glutSwapBuffers();
 }
@@ -40,20 +70,20 @@ void reshape (int w, int h) {
   glViewport(0, 0, (GLsizei) w, (GLsizei) h); 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  gluPerspective(50, 1, 1, 40);
+  gluPerspective(50, 1, 1, 400);
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
-  gluLookAt(1.5, 1.5, 1.5, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+  camera.init(-3.0, 0.0 + world_ground_offset, 0, 
+               2.0, 0.0 + world_ground_offset, 0, 
+               0.0, 1.0, 0.0);
+  camera.turnRight();
 }
 
 void idle() {
-  // rotate_around_x += 0.01;
-   rotate_around_y += 0.5;
+   //camera.driveForward();
    if (car.moving()) {
     car.moveForward();
    }
-  // rotate_around_z += 0.01;
-  // gluLookAt(rotate_around_x, 0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
   glutPostRedisplay();
 }
 
@@ -65,8 +95,7 @@ void init() {
   GLfloat ambient_light[]    = { 0.2, 0.2, 0.2, 1.0 };
   GLfloat diffuse_light[]    = { 1.0, 1.0, 1.0, 1.0 };
   GLfloat specular_light[]   = { 1.0, 1.0, 1.0, 1.0 };
-  GLfloat light_position_0[] = { 0.0, 0.0, 1.0, 0.0 };
-
+  GLfloat light_position_0[] = { 0.0, 0.0, -1.0, 0.0 };
 
   glLightfv(GL_LIGHT0, GL_AMBIENT, ambient_light);
   glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse_light);
@@ -80,17 +109,29 @@ void init() {
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_BLEND);
   glEnable(GL_COLOR_MATERIAL);
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+  world.init();
 }
 
 void specialKeys(int key, int x, int y) {
-  if (key == GLUT_KEY_RIGHT)
+  if (key == GLUT_KEY_RIGHT) {
+    camera.turnRight();
     car.turnRight();
+  }
   
-  else if (key == GLUT_KEY_LEFT)
+  else if (key == GLUT_KEY_LEFT) {
+    camera.turnLeft();
     car.turnLeft();
+  }
 
-  else
+  else if (key == GLUT_KEY_UP) {
+    camera.driveForward();
     car.goStrait();
+  }
+  else if (key == GLUT_KEY_DOWN) {
+    camera.driveBackward();
+    car.goStrait();
+  }
 }
 
 

@@ -1,12 +1,12 @@
 # A simple Makefile for CPSC 360
-CC = gcc
+CC = g++
 
-CFLAGS= -framework OPENGL -framework GLUT -lm
+CFLAGS= -framework CoreFoundation -framework OPENGL -framework GLUT -lm
 
 INCS=
 
 # the source files to be built
-SOURCES = *.cpp
+SOURCES = *.cpp ./soil/*c
 
 # object files
 OBJS = *.o
