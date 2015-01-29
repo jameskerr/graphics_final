@@ -29,7 +29,7 @@
 
 
 guard :shell do
-  watch(/(.*).cpp/) {|m| `make MAC=1` }
+  watch(/(.*)(.cpp|.h)/) {|m| `make MAC=1` }
 end
 
 # This is an example with all options that you can specify for guard-process
